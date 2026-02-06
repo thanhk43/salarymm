@@ -1,0 +1,44 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: salarymm_app
+    restart: unless-stopped
+    ports:
+      - '${APP_PORT:-3001}:3000'
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://salarymm:salarymm_secret@db:5432/salarymm?schema=public
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3001}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  db:
+    image: postgres:16-alpine
+    container_name: salarymm_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: salarymm
+      POSTGRES_PASSWORD: salarymm_secret
+      POSTGRES_DB: salarymm
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U salarymm -d salarymm']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

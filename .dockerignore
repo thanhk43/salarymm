@@ -1,0 +1,83 @@
+# Dependencies (installed in container)
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs (built in container)
+.next
+out
+dist
+build
+*.tsbuildinfo
+
+# Environment files - NEVER include in image
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.test
+!.env.example
+
+# Testing
+coverage
+.nyc_output
+test-results
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# IDE & Editors
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Version Control
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+docs
+
+# Docker (prevent recursion)
+Dockerfile*
+docker-compose*
+.dockerignore
+.docker
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Misc
+.cache
+.tmp
+tmp
+temp
+*.bak
+
+# Node.js
+.npm
+.yarn
+
+# Secrets
+*.pem
+*.key
+*.crt
+credentials*
+secrets*
+
+# Claude/Agent files
+.claude
+.agent

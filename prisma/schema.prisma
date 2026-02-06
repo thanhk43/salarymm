@@ -1,0 +1,205 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  ADMIN
+  EMPLOYEE
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum BonusType {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  TET
+  PROJECT
+  PERFORMANCE
+  OTHER
+}
+
+enum BonusStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PayrollStatus {
+  DRAFT
+  CONFIRMED
+  PAID
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      UserRole @default(EMPLOYEE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee        Employee?
+  approvedBonuses Bonus[]   @relation("BonusApprover")
+
+  @@map("users")
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees Employee[]
+
+  @@map("departments")
+}
+
+model Position {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  baseSalary  Decimal  @default(0) @db.Decimal(15, 2)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees Employee[]
+
+  @@map("positions")
+}
+
+model Employee {
+  id                    String         @id @default(cuid())
+  employeeCode          String         @unique
+  fullName              String
+  email                 String         @unique
+  phone                 String?
+  idNumber              String?        // CCCD/CMND
+  dateOfBirth           DateTime?
+  startDate             DateTime
+  bankName              String?
+  bankAccount           String?
+  socialInsuranceNumber String?        // Mã số BHXH
+  avatar                String?
+  status                EmployeeStatus @default(ACTIVE)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  // Relations
+  userId       String?     @unique
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  positionId   String?
+  position     Position?   @relation(fields: [positionId], references: [id], onDelete: SetNull)
+
+  salaryStructures SalaryStructure[]
+  allowances       Allowance[]
+  bonuses          Bonus[]
+  payrolls         Payroll[]
+
+  @@map("employees")
+}
+
+model SalaryStructure {
+  id                       String   @id @default(cuid())
+  baseSalary               Decimal  @db.Decimal(15, 2)
+  effectiveDate            DateTime
+  hasSocialInsurance       Boolean  @default(true)
+  hasHealthInsurance       Boolean  @default(true)
+  hasUnemploymentInsurance Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  employeeId String
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  payrolls   Payroll[]
+
+  @@map("salary_structures")
+}
+
+model Allowance {
+  id          String   @id @default(cuid())
+  type        String   // lunch, transport, phone, etc.
+  amount      Decimal  @db.Decimal(15, 2)
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("allowances")
+}
+
+model Bonus {
+  id         String      @id @default(cuid())
+  type       BonusType
+  amount     Decimal     @db.Decimal(15, 2)
+  reason     String
+  month      Int         // 1-12
+  year       Int
+  status     BonusStatus @default(PENDING)
+  approvedAt DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  approvedById String?
+  approvedBy   User?    @relation("BonusApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@unique([employeeId, type, month, year])
+  @@map("bonuses")
+}
+
+model Payroll {
+  id                    String        @id @default(cuid())
+  month                 Int           // 1-12
+  year                  Int
+  status                PayrollStatus @default(DRAFT)
+  // Earnings
+  baseSalary            Decimal       @db.Decimal(15, 2)
+  totalAllowances       Decimal       @default(0) @db.Decimal(15, 2)
+  totalBonus            Decimal       @default(0) @db.Decimal(15, 2)
+  grossSalary           Decimal       @db.Decimal(15, 2)
+  // Deductions
+  socialInsurance       Decimal       @default(0) @db.Decimal(15, 2) // BHXH 8%
+  healthInsurance       Decimal       @default(0) @db.Decimal(15, 2) // BHYT 1.5%
+  unemploymentInsurance Decimal       @default(0) @db.Decimal(15, 2) // BHTN 1%
+  personalIncomeTax     Decimal       @default(0) @db.Decimal(15, 2) // Thuế TNCN
+  totalDeductions       Decimal       @default(0) @db.Decimal(15, 2)
+  // Net
+  netSalary             Decimal       @db.Decimal(15, 2)
+  // Metadata
+  processedAt           DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  employeeId        String
+  employee          Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  salaryStructureId String?
+  salaryStructure   SalaryStructure? @relation(fields: [salaryStructureId], references: [id], onDelete: SetNull)
+
+  @@unique([employeeId, month, year])
+  @@map("payrolls")
+}
