@@ -6,6 +6,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/s
 import { Separator } from '@/components/ui/separator'
 import { UserNav } from '@/components/layout/user-nav'
 import { Breadcrumbs } from '@/components/layout/breadcrumbs'
+import { ThemeToggle } from '@/components/layout/theme-toggle'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -18,15 +19,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <SidebarProvider>
       <AppSidebar user={session.user} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between border-b px-4">
+        <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/80 backdrop-blur-md px-4 lg:px-6">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Separator orientation="vertical" className="mr-2 !h-4" />
             <Breadcrumbs />
           </div>
-          <UserNav user={session.user} />
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <UserNav user={session.user} />
+          </div>
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 lg:p-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   )

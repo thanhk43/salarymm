@@ -26,6 +26,17 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 
+interface BonusDetail {
+  type: string
+  amount: string
+  reason: string
+}
+
+interface AllowanceDetail {
+  type: string
+  amount: string
+}
+
 interface Payroll {
   id: string
   month: number
@@ -43,12 +54,14 @@ interface Payroll {
   netSalary: string
   processedAt: string | null
   createdAt: string
+  bonusDetails?: BonusDetail[]
   employee: {
     id: string
     employeeCode: string
     fullName: string
     department: { name: string } | null
     position: { name: string } | null
+    allowances?: AllowanceDetail[]
   }
 }
 
@@ -71,6 +84,23 @@ const statusLabels: Record<string, { label: string; variant: 'default' | 'second
 function formatCurrency(value: string | number): string {
   const num = typeof value === 'string' ? parseFloat(value) : value
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num)
+}
+
+const bonusTypeLabels: Record<string, string> = {
+  MONTHLY: 'Hàng tháng',
+  QUARTERLY: 'Quý',
+  ANNUAL: 'Năm',
+  TET: 'Tết',
+  PROJECT: 'Dự án',
+  PERFORMANCE: 'Hiệu suất',
+  OTHER: 'Khác',
+}
+
+const allowanceTypeLabels: Record<string, string> = {
+  lunch: 'Ăn trưa',
+  transport: 'Đi lại',
+  phone: 'Điện thoại',
+  housing: 'Nhà ở',
 }
 
 const currentYear = new Date().getFullYear()
@@ -230,77 +260,10 @@ export default function PayrollPage() {
   const totalNetSalary = payrolls.reduce((sum, p) => sum + parseFloat(p.netSalary), 0)
   const totalGrossSalary = payrolls.reduce((sum, p) => sum + parseFloat(p.grossSalary), 0)
 
-  // Export to CSV
-  const handleExportCSV = async () => {
-    try {
-      // Fetch all payrolls for the month (without pagination)
-      const params = new URLSearchParams({
-        limit: '1000',
-        ...(filterMonth && { month: filterMonth }),
-        ...(filterYear && { year: filterYear }),
-      })
-
-      const response = await fetch(`/api/payroll?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch')
-
-      const data: PayrollResponse = await response.json()
-
-      // Create CSV content
-      const headers = [
-        'Mã NV',
-        'Họ tên',
-        'Phòng ban',
-        'Chức vụ',
-        'Lương cơ bản',
-        'Phụ cấp',
-        'Thưởng',
-        'Lương Gross',
-        'BHXH',
-        'BHYT',
-        'BHTN',
-        'Thuế TNCN',
-        'Tổng khấu trừ',
-        'Lương Net',
-        'Trạng thái',
-      ]
-
-      const rows = data.data.map((p) => [
-        p.employee.employeeCode,
-        p.employee.fullName,
-        p.employee.department?.name || '',
-        p.employee.position?.name || '',
-        p.baseSalary,
-        p.totalAllowances,
-        p.totalBonus,
-        p.grossSalary,
-        p.socialInsurance,
-        p.healthInsurance,
-        p.unemploymentInsurance,
-        p.personalIncomeTax,
-        p.totalDeductions,
-        p.netSalary,
-        statusLabels[p.status].label,
-      ])
-
-      const csvContent = [
-        headers.join(','),
-        ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-      ].join('\n')
-
-      // Add BOM for UTF-8 support in Excel
-      const BOM = '\uFEFF'
-      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `bang-luong-thang-${filterMonth}-${filterYear}.csv`
-      link.click()
-      URL.revokeObjectURL(url)
-
-      toast.success('Đã xuất file Excel thành công')
-    } catch {
-      toast.error('Không thể xuất file')
-    }
+  // Export to Excel
+  const handleExportExcel = () => {
+    window.open(`/api/reports/payroll-excel?month=${filterMonth}&year=${filterYear}`, '_blank')
+    toast.success('Đang tải file Excel...')
   }
 
   // Batch confirm all draft payrolls
@@ -346,7 +309,7 @@ export default function PayrollPage() {
         </div>
         <div className="flex gap-2">
           {payrolls.length > 0 && (
-            <Button variant="outline" onClick={handleExportCSV}>
+            <Button variant="outline" onClick={handleExportExcel}>
               <Download className="mr-2 h-4 w-4" />
               Xuất Excel
             </Button>
@@ -654,10 +617,30 @@ export default function PayrollPage() {
                     <span>Phụ cấp</span>
                     <span className="font-mono">{formatCurrency(selectedPayroll.totalAllowances)}</span>
                   </div>
+                  {selectedPayroll.employee.allowances && selectedPayroll.employee.allowances.length > 0 && (
+                    <div className="ml-4 space-y-1 text-xs text-muted-foreground">
+                      {selectedPayroll.employee.allowances.map((a, i) => (
+                        <div key={i} className="flex justify-between">
+                          <span>• {allowanceTypeLabels[a.type] || a.type}</span>
+                          <span className="font-mono">{formatCurrency(a.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span>Thưởng</span>
                     <span className="font-mono">{formatCurrency(selectedPayroll.totalBonus)}</span>
                   </div>
+                  {selectedPayroll.bonusDetails && selectedPayroll.bonusDetails.length > 0 && (
+                    <div className="ml-4 space-y-1 text-xs text-muted-foreground">
+                      {selectedPayroll.bonusDetails.map((b, i) => (
+                        <div key={i} className="flex justify-between">
+                          <span>• {bonusTypeLabels[b.type] || b.type}: {b.reason}</span>
+                          <span className="font-mono">{formatCurrency(b.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex justify-between border-t pt-2 font-medium">
                     <span>Tổng thu nhập (Gross)</span>
                     <span className="font-mono">{formatCurrency(selectedPayroll.grossSalary)}</span>

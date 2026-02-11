@@ -284,6 +284,47 @@ export default function BonusesPage() {
         </Button>
       </div>
 
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Chờ duyệt</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">
+              {bonuses.filter((b) => b.status === 'PENDING').length}
+            </div>
+            <p className="text-xs text-muted-foreground">khoản thưởng đang chờ</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Đã duyệt</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {bonuses.filter((b) => b.status === 'APPROVED').length}
+            </div>
+            <p className="text-xs text-muted-foreground">khoản thưởng đã phê duyệt</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Tổng tiền thưởng</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold tabular-nums">
+              {formatCurrency(
+                bonuses
+                  .filter((b) => b.status === 'APPROVED')
+                  .reduce((sum, b) => sum + parseFloat(b.amount), 0)
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">đã duyệt trong kỳ</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

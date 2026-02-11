@@ -305,6 +305,17 @@ export default function MyPayslipsPage() {
             </div>
           )}
           <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedPayroll) {
+                  window.open(`/api/payslips/${selectedPayroll.id}/pdf`, '_blank')
+                }
+              }}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Tải PDF
+            </Button>
             <Button variant="outline" onClick={() => window.print()}>
               <Download className="mr-2 h-4 w-4" />
               In phiếu lương

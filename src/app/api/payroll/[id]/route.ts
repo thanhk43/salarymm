@@ -28,11 +28,33 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             bankAccount: true,
             department: { select: { name: true } },
             position: { select: { name: true } },
+            allowances: {
+              where: { isActive: true },
+              select: { type: true, amount: true },
+            },
           },
         },
         salaryStructure: true,
       },
     })
+
+    // Fetch approved bonuses for this employee in this payroll period
+    if (payroll) {
+      const bonuses = await prisma.bonus.findMany({
+        where: {
+          employeeId: payroll.employeeId,
+          month: payroll.month,
+          year: payroll.year,
+          status: 'APPROVED',
+        },
+        select: {
+          type: true,
+          amount: true,
+          reason: true,
+        },
+      })
+      ;(payroll as Record<string, unknown>).bonusDetails = bonuses
+    }
 
     if (!payroll) {
       return NextResponse.json({ error: 'Không tìm thấy bảng lương' }, { status: 404 })

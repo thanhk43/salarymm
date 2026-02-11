@@ -92,6 +92,11 @@ const employeeMenuItems = [
     url: '/dashboard/my-payslips',
     icon: FileText,
   },
+  {
+    title: 'Hồ sơ cá nhân',
+    url: '/dashboard/profile',
+    icon: Users,
+  },
 ]
 
 export function AppSidebar({ user }: AppSidebarProps) {
@@ -101,12 +106,12 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-6 py-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+      <SidebarHeader className="border-b px-6 py-5">
+        <Link href="/dashboard" className="group flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 text-sm font-bold text-primary-foreground transition-shadow group-hover:shadow-md group-hover:shadow-primary/20">
             S
           </div>
-          <span className="text-lg font-semibold">SalaryMM</span>
+          <span className="text-lg font-semibold tracking-tight">SalaryMM</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -146,14 +151,14 @@ export function AppSidebar({ user }: AppSidebarProps) {
         )}
       </SidebarContent>
       <SidebarFooter className="border-t p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+        <div className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-sidebar-accent">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-xs font-semibold text-primary">
             {user.name?.charAt(0).toUpperCase() || 'U'}
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">{user.name}</span>
-            <span className="text-xs text-muted-foreground">
-              {user.role === 'ADMIN' ? 'Administrator' : 'Employee'}
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-medium truncate">{user.name}</span>
+            <span className="text-[11px] text-muted-foreground">
+              {user.role === 'ADMIN' ? 'Quản trị viên' : 'Nhân viên'}
             </span>
           </div>
         </div>

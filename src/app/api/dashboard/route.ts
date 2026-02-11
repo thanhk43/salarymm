@@ -87,6 +87,48 @@ export async function GET() {
       0
     )
 
+    // Get salary by department
+    const departmentSalaries = await prisma.department.findMany({
+      select: {
+        name: true,
+        employees: {
+          where: { status: EmployeeStatus.ACTIVE },
+          select: {
+            salaryStructures: {
+              orderBy: { effectiveDate: 'desc' },
+              take: 1,
+              select: { baseSalary: true },
+            },
+          },
+        },
+      },
+    })
+
+    const salaryByDepartment = departmentSalaries.map((dept) => {
+      const totalSalary = dept.employees.reduce((sum, emp) => {
+        const salary = emp.salaryStructures[0]?.baseSalary
+        return sum + (salary ? Number(salary) : 0)
+      }, 0)
+      return {
+        department: dept.name,
+        totalSalary,
+        employeeCount: dept.employees.length,
+        avgSalary: dept.employees.length > 0 ? Math.round(totalSalary / dept.employees.length) : 0,
+      }
+    }).filter((d) => d.employeeCount > 0)
+    .sort((a, b) => b.totalSalary - a.totalSalary)
+
+    // Get recent payroll summary
+    const currentMonth = new Date().getMonth() + 1
+    const currentYear = new Date().getFullYear()
+    const recentPayrolls = await prisma.payroll.groupBy({
+      by: ['month', 'year', 'status'],
+      _sum: { netSalary: true },
+      _count: true,
+      orderBy: [{ year: 'desc' }, { month: 'desc' }],
+      take: 12,
+    })
+
     return NextResponse.json({
       stats: {
         totalEmployees,
@@ -103,6 +145,8 @@ export async function GET() {
         name: d.name,
         employeeCount: d._count.employees,
       })),
+      salaryByDepartment,
+      recentPayrolls,
       recentEmployees,
       pendingBonusList,
     })

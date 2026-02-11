@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { Users, Building2, Briefcase, Gift, TrendingUp, Clock, ArrowRight } from 'lucide-react'
+import { Users, Building2, Gift, TrendingUp, Clock, ArrowRight, BarChart3 } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +25,12 @@ interface DashboardData {
     code: string
     name: string
     employeeCount: number
+  }[]
+  salaryByDepartment: {
+    department: string
+    totalSalary: number
+    employeeCount: number
+    avgSalary: number
   }[]
   recentEmployees: {
     id: string
@@ -79,6 +85,18 @@ export default function DashboardPage() {
   const { data: session } = useSession()
   const [data, setData] = useState<DashboardData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [currentDate, setCurrentDate] = useState<string>('')
+
+  useEffect(() => {
+    setCurrentDate(
+      new Date().toLocaleDateString('vi-VN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    )
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,66 +139,77 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Chào mừng trở lại, {session?.user?.name || 'Admin'}!
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">
+          Xin chào, {session?.user?.name || 'Admin'}
+        </h1>
+        {currentDate && (
+          <p className="mt-1 text-sm text-muted-foreground">{currentDate}</p>
+        )}
       </div>
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng nhân viên</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Tổng nhân viên</CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data?.stats.totalEmployees || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">{data?.stats.activeEmployees || 0}</span> đang làm ·{' '}
-              <span className="text-gray-500">{data?.stats.inactiveEmployees || 0}</span> nghỉ việc
+            <div className="text-3xl font-bold tracking-tight">{data?.stats.totalEmployees || 0}</div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              <span className="text-emerald-600">{data?.stats.activeEmployees || 0}</span> đang làm
+              {' '}&middot;{' '}
+              <span>{data?.stats.inactiveEmployees || 0}</span> nghỉ việc
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng quỹ lương</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Tổng quỹ lương</CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10">
+              <TrendingUp className="h-4 w-4 text-emerald-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">
+            <div className="text-3xl font-bold tracking-tight tabular-nums">
               {formatCurrency(data?.stats.totalSalaryExpenses || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">VNĐ / tháng</p>
+            <p className="mt-1 text-xs text-muted-foreground">VNĐ / tháng</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Phòng ban</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Phòng ban</CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10">
+              <Building2 className="h-4 w-4 text-violet-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data?.stats.totalDepartments || 0}</div>
-            <p className="text-xs text-muted-foreground">phòng ban hoạt động</p>
+            <div className="text-3xl font-bold tracking-tight">{data?.stats.totalDepartments || 0}</div>
+            <p className="mt-1 text-xs text-muted-foreground">phòng ban hoạt động</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Thưởng chờ duyệt</CardTitle>
-            <Gift className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Thưởng chờ duyệt</CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10">
+              <Gift className="h-4 w-4 text-amber-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{data?.stats.pendingBonuses || 0}</div>
-            <p className="text-xs text-muted-foreground">đề xuất đang chờ</p>
+            <div className="text-3xl font-bold tracking-tight text-amber-600">{data?.stats.pendingBonuses || 0}</div>
+            <p className="mt-1 text-xs text-muted-foreground">đề xuất đang chờ</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Content Grid */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Department Statistics */}
         <Card>
           <CardHeader>
@@ -200,7 +229,7 @@ export default function DashboardPage() {
                       <span className="text-sm font-medium">{dept.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
+                      <div className="h-2 w-24 overflow-hidden rounded-full bg-primary/10">
                         <div
                           className="h-full bg-primary"
                           style={{
@@ -230,6 +259,51 @@ export default function DashboardPage() {
                 </Button>
               </Link>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Salary by Department Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Quỹ lương theo phòng ban
+            </CardTitle>
+            <CardDescription>Tổng lương cơ bản theo từng phòng ban</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data?.salaryByDepartment && data.salaryByDepartment.length > 0 ? (
+              <div className="space-y-4">
+                {data.salaryByDepartment.map((dept) => {
+                  const maxSalary = Math.max(...data.salaryByDepartment.map((d) => d.totalSalary))
+                  const percentage = maxSalary > 0 ? (dept.totalSalary / maxSalary) * 100 : 0
+                  return (
+                    <div key={dept.department} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{dept.department}</span>
+                        <span className="font-mono text-muted-foreground">
+                          {formatCurrency(dept.totalSalary)} ({dept.employeeCount} NV)
+                        </span>
+                      </div>
+                      <div className="h-3 w-full overflow-hidden rounded-full bg-primary/10">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-primary to-primary/60 transition-all"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        TB: {formatFullCurrency(dept.avgSalary)}/người
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-muted-foreground">
+                <BarChart3 className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                <p>Chưa có dữ liệu lương</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

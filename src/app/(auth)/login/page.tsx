@@ -124,30 +124,47 @@ function LoginFormSkeleton() {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="mb-4 flex justify-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-2xl font-bold text-primary-foreground">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/30" />
+      <div
+        className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage: 'radial-gradient(circle, oklch(0.7 0.02 260) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }}
+      />
+
+      <Card className="relative z-10 w-full max-w-[420px] border-0 shadow-xl shadow-primary/5">
+        <CardHeader className="space-y-1 text-center pb-2">
+          <div className="mb-6 flex justify-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-2xl font-bold text-primary-foreground shadow-md shadow-primary/20">
               S
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">SalaryMM</CardTitle>
-          <CardDescription>Hệ thống quản lý lương nhân viên</CardDescription>
+          <CardTitle className="text-2xl font-bold tracking-tight">SalaryMM</CardTitle>
+          <CardDescription className="text-balance">
+            Hệ thống quản lý lương nhân viên
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-2">
           <Suspense fallback={<LoginFormSkeleton />}>
             <LoginForm />
           </Suspense>
 
-          <div className="mt-6 border-t pt-4">
-            <p className="text-center text-sm text-muted-foreground">Tài khoản demo:</p>
-            <div className="mt-2 space-y-1 text-center text-xs text-muted-foreground">
+          <div className="mt-8 rounded-lg bg-muted/50 p-3">
+            <p className="text-center text-xs font-medium text-muted-foreground mb-2">
+              Tài khoản demo
+            </p>
+            <div className="space-y-1 text-center text-xs text-muted-foreground">
               <p>
-                <span className="font-medium">Admin:</span> admin@salarymm.com / admin123
+                <span className="font-medium text-foreground/70">Admin:</span>{' '}
+                <code className="rounded bg-muted px-1 py-0.5 text-[11px]">admin@salarymm.com</code>{' '}
+                / admin123
               </p>
               <p>
-                <span className="font-medium">Employee:</span> nguyenvana@salarymm.com / employee123
+                <span className="font-medium text-foreground/70">Employee:</span>{' '}
+                <code className="rounded bg-muted px-1 py-0.5 text-[11px]">nguyenvana@salarymm.com</code>{' '}
+                / employee123
               </p>
             </div>
           </div>
